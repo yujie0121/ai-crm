@@ -17,19 +17,16 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import type { ReportGenerationRequest, ReportGenerationResult, SalesMetrics, CustomerMetrics, PerformanceMetrics } from '../../ai/models/reportGeneration';
+import type { Report, ReportType, ReportData, SalesMetrics, CustomerMetrics, PerformanceMetrics } from './models/reportTypes';
 import ReportChart from './components/ReportChart';
 
 const ReportsPage: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
-  const [reportType, setReportType] = useState<'sales' | 'customer' | 'performance' | 'custom'>('sales');
+  const [reportType, setReportType] = useState<ReportType>('sales');
   const [startDate, setStartDate] = useState<Date | null>(new Date());
   const [endDate, setEndDate] = useState<Date | null>(new Date());
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedReport, setGeneratedReport] = useState<ReportGenerationResult | null>(null);
+  const [generatedReport, setGeneratedReport] = useState<Report | null>(null);
 
   const handleOpenDialog = () => {
     setOpenDialog(true);
@@ -46,6 +43,9 @@ const ReportsPage: React.FC = () => {
     try {
       // 模拟报告生成
       await new Promise(resolve => setTimeout(resolve, 2000));
+
+      const reportId = `report-${Date.now()}`;
+      const reportTitle = `${getReportTypeText(reportType)} - ${startDate.toLocaleDateString()} 至 ${endDate.toLocaleDateString()}`;
       
       // 模拟获取数据
       const salesData: SalesMetrics = {
@@ -239,26 +239,28 @@ const ReportsPage: React.FC = () => {
               </Select>
             </FormControl>
 
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <DatePicker
-                    label="开始日期"
-                    value={startDate}
-                    onChange={(newValue) => setStartDate(newValue)}
-                    sx={{ width: '100%' }}
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <DatePicker
-                    label="结束日期"
-                    value={endDate}
-                    onChange={(newValue) => setEndDate(newValue)}
-                    sx={{ width: '100%' }}
-                  />
-                </Grid>
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="开始日期"
+                  type="date"
+                  value={startDate ? startDate.toISOString().split('T')[0] : ''}
+                  onChange={(e) => setStartDate(new Date(e.target.value))}
+                  InputLabelProps={{ shrink: true }}
+                />
               </Grid>
-            </LocalizationProvider>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="结束日期"
+                  type="date"
+                  value={endDate ? endDate.toISOString().split('T')[0] : ''}
+                  onChange={(e) => setEndDate(new Date(e.target.value))}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+            </Grid>
           </Box>
         </DialogContent>
         <DialogActions>

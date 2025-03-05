@@ -9,6 +9,8 @@ import SalesDetail from './features/sales/SalesDetail';
 import TaskList from './features/tasks/TaskList';
 import TaskDetail from './features/tasks/TaskDetail';
 import LoginPage from './features/auth/LoginPage';
+import { KnowledgeBase } from './features/knowledgebase/pages/KnowledgeBase';
+import ReportList from './features/reports/ReportList';
 import { ThemeProvider } from '@mui/material/styles';
 import { AuthProvider, useAuth } from './features/auth/AuthContext';
 import theme from './theme';
@@ -39,6 +41,8 @@ function App() {
                         <Route path="/sales/:id" element={<SalesDetail />} />
                         <Route path="/tasks" element={<TaskList />} />
                         <Route path="/tasks/:id" element={<TaskDetail />} />
+                        <Route path="/knowledgebase" element={<KnowledgeBase />} />
+                        <Route path="/reports" element={<ReportList />} />
                       </Routes>
                     </MainLayout>
                   }

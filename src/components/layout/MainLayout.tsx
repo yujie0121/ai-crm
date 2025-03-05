@@ -8,6 +8,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import AssessmentIcon from '@mui/icons-material/Assessment';
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 
 const drawerWidth = 240;
 
@@ -165,6 +166,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 <AssessmentIcon />
               </ListItemIcon>
               <ListItemText primary="报告生成" />
+            </ListItem>
+            <ListItem
+              button
+              selected={location.pathname.startsWith('/knowledgebase')}
+              onClick={() => navigate('/knowledgebase')}
+            >
+              <ListItemIcon>
+                <LibraryBooksIcon />
+              </ListItemIcon>
+              <ListItemText primary="知识库" />
             </ListItem>
           </List>
         </Box>
