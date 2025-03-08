@@ -11,6 +11,7 @@ import TaskDetail from './features/tasks/TaskDetail';
 import LoginPage from './features/auth/LoginPage';
 import { KnowledgeBase } from './features/knowledgebase/pages/KnowledgeBase';
 import ReportList from './features/reports/ReportList';
+import UserManagement from './features/auth/components/UserManagement';
 import { ThemeProvider } from '@mui/material/styles';
 import { AuthProvider, useAuth } from './features/auth/AuthContext';
 import theme from './theme';
@@ -43,6 +44,7 @@ function App() {
                         <Route path="/tasks/:id" element={<TaskDetail />} />
                         <Route path="/knowledgebase" element={<KnowledgeBase />} />
                         <Route path="/reports" element={<ReportList />} />
+                        <Route path="/users" element={<UserManagement />} />
                       </Routes>
                     </MainLayout>
                   }

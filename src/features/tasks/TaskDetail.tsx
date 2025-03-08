@@ -9,10 +9,6 @@ import {
   Button,
   Chip,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   List,
   ListItem,
   ListItemText,
@@ -144,10 +140,29 @@ const getStatusText = (status: TaskDetail['status']) => {
   return statusMap[status];
 };
 
-const TaskDetail: React.FC<TaskDetailProps> = ({ taskId = '1' }) => {
-  const [editMode, setEditMode] = useState(false);
-  const [task, setTask] = useState<TaskDetail>(mockTaskData);
+const TaskDetail: React.FC<TaskDetailProps> = ({ taskId: _ = '1' }) => {
   const [newComment, setNewComment] = useState('');
+
+  const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNewComment(e.target.value);
+  };
+
+  const handleAddComment = () => {
+    if (!newComment.trim()) return;
+
+    // 这里应该调用API添加评论，现在先模拟添加
+    const newCommentObj: TaskComment = {
+      id: String(Date.now()),
+      content: newComment,
+      author: '当前用户',
+      timestamp: new Date().toLocaleString()
+    };
+
+    // 直接使用mockTaskData而不是task状态
+    mockTaskData.comments = [newCommentObj, ...mockTaskData.comments];
+
+    setNewComment('');
+  };
 
   return (
     <Box sx={{ maxWidth: 1200, margin: '0 auto', width: '100%', px: 3 }}>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Typography, Box, Alert } from '@mui/material';
+import { Container, Typography, Box } from '@mui/material';
 import { KnowledgeList } from '../components/KnowledgeList';
 import { KnowledgeDetail } from '../components/KnowledgeDetail';
 import { KnowledgeUpload } from '../components/KnowledgeUpload';

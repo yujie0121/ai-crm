@@ -36,28 +36,32 @@ export class SalesPredictionModel {
    * 初始化模型
    */
   async initialize(): Promise<void> {
-    this.model = tf.sequential();
+    // 创建sequential模型
+    const sequentialModel = tf.sequential();
     
     // 构建模型架构
-    this.model.add(tf.layers.dense({
+    sequentialModel.add(tf.layers.dense({
       inputShape: [6], // 输入特征数量
       units: 32,
       activation: 'relu'
     }));
     
-    this.model.add(tf.layers.dropout({
+    sequentialModel.add(tf.layers.dropout({
       rate: 0.2
     }));
     
-    this.model.add(tf.layers.dense({
+    sequentialModel.add(tf.layers.dense({
       units: 16,
       activation: 'relu'
     }));
     
-    this.model.add(tf.layers.dense({
+    sequentialModel.add(tf.layers.dense({
       units: 2, // 预测数量和收入
       activation: 'linear'
     }));
+    
+    // 将sequential模型赋值给this.model
+    this.model = sequentialModel;
     
     this.model.compile({
       optimizer: 'adam',
@@ -145,8 +149,11 @@ export class SalesPredictionModel {
     const volatility = Math.abs(data.marketTrend);
     const seasonalityImpact = Math.abs(this.calculateSeasonalImpact(data));
     
-    // 置信度基于市场波动性和季节性影响
-    const confidence = 1 - (volatility * 0.3 + seasonalityImpact * 0.2);
+    // 计算预测值与历史值的差异
+    const predictionDifference = Math.abs((predictedQuantity - data.quantity) / data.quantity);
+    
+    // 置信度基于市场波动性、季节性影响和预测差异
+    const confidence = 1 - (volatility * 0.3 + seasonalityImpact * 0.2 + predictionDifference * 0.1);
     
     return parseFloat(confidence.toFixed(2));
   }
@@ -203,6 +210,11 @@ export class SalesPredictionModel {
       actions.push('淡季促销清理库存');
     }
 
+    // 根据预测数量生成建议
+    if (predictedQuantity > data.quantity * 1.5) {
+      actions.push('考虑扩大生产规模以满足增长需求');
+    }
+    
     // 根据预测收入生成建议
     if (predictedRevenue < data.revenue * 0.8) {
       actions.push('制定价格优化策略');
@@ -231,7 +243,7 @@ export class SalesPredictionModel {
       batchSize: 32,
       validationSplit: 0.2,
       callbacks: {
-        onEpochEnd: (epoch, logs) => {
+        onEpochEnd: (epoch: number, logs?: tf.Logs) => {
           console.log(`Epoch ${epoch}: loss = ${logs?.loss}, mse = ${logs?.mse}`);
         }
       }

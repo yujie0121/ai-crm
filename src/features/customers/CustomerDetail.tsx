@@ -5,7 +5,6 @@ import {
   CardContent,
   Typography,
   Grid,
-  Divider,
   Tabs,
   Tab,
   Button
@@ -44,8 +43,15 @@ const mockCustomerData: CustomerData = {
 
 const CustomerDetail: React.FC<CustomerDetailProps> = ({ customerId = '1' }) => {
   const [tabValue, setTabValue] = React.useState(0);
+  const [customerData, setCustomerData] = React.useState<CustomerData>(mockCustomerData);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  React.useEffect(() => {
+    // 这里应该使用customerId从API获取客户数据
+    // 暂时使用模拟数据
+    setCustomerData(mockCustomerData);
+  }, [customerId]);
+
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -70,24 +76,24 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({ customerId = '1' }) => 
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <Typography variant="h6" gutterBottom>
-                {mockCustomerData.name}
+                {customerData.name}
               </Typography>
               <Typography color="textSecondary" gutterBottom>
-                {mockCustomerData.company}
+                {customerData.company}
               </Typography>
               <Typography variant="body2">
-                状态: {mockCustomerData.status}
+                状态: {customerData.status}
               </Typography>
             </Grid>
             <Grid item xs={12} md={6}>
               <Typography variant="body2" gutterBottom>
-                邮箱: {mockCustomerData.email}
+                邮箱: {customerData.email}
               </Typography>
               <Typography variant="body2" gutterBottom>
-                电话: {mockCustomerData.phone}
+                电话: {customerData.phone}
               </Typography>
               <Typography variant="body2" gutterBottom>
-                地址: {mockCustomerData.address}
+                地址: {customerData.address}
               </Typography>
             </Grid>
           </Grid>

@@ -17,7 +17,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import type { Report, ReportType, ReportData, SalesMetrics, CustomerMetrics, PerformanceMetrics } from './models/reportTypes';
+import type { Report, ReportType, SalesMetrics, CustomerMetrics, PerformanceMetrics } from './models/reportTypes';
+import type { ReportGenerationResult } from '../../ai/models/nlpProcessor';
 import ReportChart from './components/ReportChart';
 
 const ReportsPage: React.FC = () => {
@@ -45,7 +46,6 @@ const ReportsPage: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       const reportId = `report-${Date.now()}`;
-      const reportTitle = `${getReportTypeText(reportType)} - ${startDate.toLocaleDateString()} 至 ${endDate.toLocaleDateString()}`;
       
       // 模拟获取数据
       const salesData: SalesMetrics = {
@@ -96,22 +96,8 @@ const ReportsPage: React.FC = () => {
         ]
       };
 
-      let reportData;
-      switch (reportType) {
-        case 'sales':
-          reportData = salesData;
-          break;
-        case 'customer':
-          reportData = customerData;
-          break;
-        case 'performance':
-          reportData = performanceData;
-          break;
-        default:
-          reportData = {};
-      }
-
-      const mockReport: ReportGenerationResult = {
+      // 创建ReportGenerationResult对象
+      const mockReportData: ReportGenerationResult = {
         title: `${reportType.charAt(0).toUpperCase() + reportType.slice(1)}报告`,
         summary: `报告期间：${startDate?.toLocaleDateString()} 至 ${endDate?.toLocaleDateString()}\n主要指标和趋势分析显示业务整体呈现稳健增长态势。`,
         sections: [
@@ -196,8 +182,29 @@ const ReportsPage: React.FC = () => {
         ],
         generatedDate: new Date()
       };
-
-      setGeneratedReport(mockReport);
+      
+      // 将ReportGenerationResult转换为Report类型
+      const report: Report = {
+        id: reportId,
+        title: mockReportData.title,
+        type: reportType,
+        description: mockReportData.summary.split('\n')[0],
+        createdAt: new Date().toISOString(),
+        status: 'ready',
+        data: {
+          summary: mockReportData.summary,
+          sections: mockReportData.sections,
+          metrics: {
+            sales: reportType === 'sales' ? salesData : undefined,
+            customer: reportType === 'customer' ? customerData : undefined,
+            performance: reportType === 'performance' ? performanceData : undefined
+          },
+          recommendations: mockReportData.recommendations,
+          generatedDate: mockReportData.generatedDate
+        }
+      };
+      
+      setGeneratedReport(report);
       handleCloseDialog();
     } catch (error) {
       console.error('报告生成失败:', error);
@@ -283,10 +290,10 @@ const ReportsPage: React.FC = () => {
               {generatedReport.title}
             </Typography>
             <Typography variant="body1" paragraph>
-              {generatedReport.summary}
+              {generatedReport.data?.summary}
             </Typography>
 
-            {generatedReport.sections.map((section, index) => (
+            {generatedReport.data?.sections.map((section, index) => (
               <Box key={index} sx={{ mt: 3 }}>
                 <Typography variant="h6" gutterBottom>
                   {section.title}
@@ -296,7 +303,7 @@ const ReportsPage: React.FC = () => {
                 </Typography>
                 {section.charts && (
                   <Box sx={{ mt: 2, mb: 2 }}>
-                    {section.charts.map((chart, chartIndex) => (
+                    {section.charts.map((chart: any, chartIndex) => (
                       <ReportChart
                         key={chartIndex}
                         type={chart.type}
@@ -313,7 +320,7 @@ const ReportsPage: React.FC = () => {
               <Typography variant="h6" gutterBottom>
                 AI建议
               </Typography>
-              {generatedReport.recommendations.map((recommendation, index) => (
+              {generatedReport.data?.recommendations.map((recommendation, index) => (
                 <Typography key={index} variant="body1" paragraph>
                   {recommendation}
                 </Typography>
@@ -321,7 +328,7 @@ const ReportsPage: React.FC = () => {
             </Box>
 
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              生成时间: {generatedReport.generatedDate.toLocaleString()}
+              生成时间: {generatedReport.data?.generatedDate.toLocaleString()}
             </Typography>
           </CardContent>
         </Card>

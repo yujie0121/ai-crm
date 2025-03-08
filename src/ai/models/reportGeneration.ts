@@ -1,4 +1,7 @@
-import { ChartData } from '../../features/reports/components/ReportChart';
+interface ChartData {
+  [key: string]: any;
+}
+
 
 export interface ReportSection {
   title: string;

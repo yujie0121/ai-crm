@@ -1,4 +1,7 @@
-import { ChartData } from '../components/ReportChart';
+interface ChartData {
+  [key: string]: any;
+}
+
 
 export interface Report {
   id: string;

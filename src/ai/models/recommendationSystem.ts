@@ -46,26 +46,73 @@ export class RecommendationSystem {
   private readonly embeddingSize = 32;
 
   /**
+   * 生成产品嵌入向量
+   */
+  private generateProductEmbedding(product: ProductFeatures): number[] {
+    // 基于产品特征生成嵌入向量
+    // 实际应用中会使用更复杂的算法
+    const embedding = new Array(this.embeddingSize).fill(0);
+    
+    // 使用产品特征向量初始化嵌入
+    const featureLength = Math.min(product.features.length, this.embeddingSize);
+    for (let i = 0; i < featureLength; i++) {
+      embedding[i] = product.features[i];
+    }
+    
+    // 添加类别和价格信息
+    const categoryHash = this.hashString(product.category) % this.embeddingSize;
+    embedding[categoryHash] += 1;
+    
+    // 价格影响
+    const priceIndex = Math.floor((product.price / 1000) * (this.embeddingSize / 4));
+    if (priceIndex < this.embeddingSize) {
+      embedding[priceIndex] += 0.5;
+    }
+    
+    // 归一化
+    const norm = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
+    if (norm > 0) {
+      for (let i = 0; i < this.embeddingSize; i++) {
+        embedding[i] /= norm;
+      }
+    }
+    
+    return embedding;
+  }
+  
+  /**
+   * 简单的字符串哈希函数
+   */
+  private hashString(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0; // 转换为32位整数
+    }
+    return Math.abs(hash);
+  }
+
+  /**
    * 初始化模型
    */
   async initialize(): Promise<void> {
     this.model = tf.sequential();
     
     // 构建模型架构
-    this.model.add(tf.layers.dense({
+    this.model.layers.push(tf.layers.dense({
       inputShape: [this.embeddingSize * 2], // 用户和产品嵌入的拼接
       units: 64,
       activation: 'relu'
     }));
     
-    this.model.add(tf.layers.dropout({ rate: 0.3 }));
+    this.model.layers.push(tf.layers.dropout({ rate: 0.3 }));
     
-    this.model.add(tf.layers.dense({
+    this.model.layers.push(tf.layers.dense({
       units: 32,
       activation: 'relu'
     }));
     
-    this.model.add(tf.layers.dense({
+    this.model.layers.push(tf.layers.dense({
       units: 1,
       activation: 'sigmoid'
     }));
@@ -249,24 +296,64 @@ export class RecommendationSystem {
     userBehaviors.forEach((behaviors, userId) => {
       this.updateUserEmbedding(userId, behaviors);
     });
-
-    console.log('推荐系统模型已更新');
-  }
-
-  /**
-   * 生成产品嵌入向量
-   */
-  private generateProductEmbedding(product: ProductFeatures): number[] {
-    // 将产品特征转换为嵌入向量
-    const embedding = [...product.features];
     
-    // 如果特征向量长度不够，补充随机值
-    while (embedding.length < this.embeddingSize) {
-      embedding.push(Math.random() * 2 - 1);
+    // 准备训练数据
+    const trainingData: number[][] = [];
+    const labels: number[] = [];
+    
+    // 为每个用户生成正样本和负样本
+    userBehaviors.forEach((userBehaviors, userId) => {
+      const userEmbedding = this.userEmbeddings.get(userId);
+      if (!userEmbedding) return;
+      
+      // 正样本：用户交互过的产品
+      userBehaviors.forEach(behavior => {
+        const productEmbedding = this.productEmbeddings.get(behavior.productId);
+        if (productEmbedding) {
+          trainingData.push([...userEmbedding, ...productEmbedding]);
+          labels.push(1); // 正样本
+        }
+      });
+      
+      // 负样本：随机选择用户未交互过的产品
+      const interactedProductIds = new Set(userBehaviors.map(b => b.productId));
+      const availableProducts = products.filter(p => !interactedProductIds.has(p.productId));
+      
+      // 选择与正样本数量相同的负样本
+      const negativeCount = Math.min(userBehaviors.length, availableProducts.length);
+      for (let i = 0; i < negativeCount; i++) {
+        const randomIndex = Math.floor(Math.random() * availableProducts.length);
+        const product = availableProducts[randomIndex];
+        const productEmbedding = this.productEmbeddings.get(product.productId);
+        
+        if (productEmbedding) {
+          trainingData.push([...userEmbedding, ...productEmbedding]);
+          labels.push(0); // 负样本
+        }
+      }
+    });
+    
+    if (trainingData.length === 0) {
+      console.log('没有足够的训练数据');
+      return;
     }
     
-    // 如果特征向量过长，截取
-    return embedding.slice(0, this.embeddingSize);
+    // 转换为张量
+    const trainingTensor = tf.tensor2d(trainingData);
+    const labelTensor = tf.tensor1d(labels);
+    
+    // 训练模型
+    await this.model!.fit(trainingTensor, labelTensor, {
+      epochs: 20,
+      batchSize: 32,
+      validationSplit: 0.2
+    });
+    
+    // 释放张量
+    trainingTensor.dispose();
+    labelTensor.dispose();
+
+    console.log('推荐系统模型已更新');
   }
 
   /**

@@ -100,7 +100,7 @@ const ReportChart: React.FC<ReportChartProps> = ({ type, data, options = {} }) =
                 outerRadius={80}
                 label
               >
-                {data.map((entry, index) => (
+                {data.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                 ))}
               </Pie>

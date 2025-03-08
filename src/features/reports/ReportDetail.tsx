@@ -17,7 +17,7 @@ const ReportDetail: React.FC<ReportDetailProps> = ({ report }) => {
   return (
     <Box sx={{ maxWidth: 2000, margin: '0 auto', width: '100%' }}>
       <Card>
-      <CardContent>
+        <CardContent>
         <Box sx={{ mb: 4 }}>
           <Typography variant="h4" gutterBottom>
             {report.title}
@@ -97,7 +97,8 @@ const ReportDetail: React.FC<ReportDetailProps> = ({ report }) => {
         </Box>
       </CardContent>
     </Card>
+    </Box>
   );
-};
+}
 
 export default ReportDetail;

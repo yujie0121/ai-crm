@@ -25,7 +25,7 @@ import {
   Alert
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { Role, Permission, PERMISSIONS } from '../types';
+import { Role, PERMISSIONS } from '../types';
 import { authApi } from '../api/authApi';
 import PermissionGuard from '../PermissionGuard';
 

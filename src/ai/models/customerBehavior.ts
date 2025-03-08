@@ -197,8 +197,8 @@ export class CustomerBehaviorModel {
       batchSize: 32,
       validationSplit: 0.2,
       callbacks: {
-        onEpochEnd: (epoch: number, logs: { loss: number; acc: number }) => {
-          console.log(`Epoch ${epoch}: loss = ${logs?.loss}, accuracy = ${logs?.acc}`);
+        onEpochEnd: (epoch: number, logs?: tf.Logs) => {
+          console.log(`Epoch ${epoch}: loss = ${logs?.loss}, accuracy = ${logs?.accuracy}`);
         }
       }
     });

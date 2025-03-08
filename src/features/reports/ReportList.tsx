@@ -22,6 +22,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import GroupIcon from '@mui/icons-material/Group';
 import WorkIcon from '@mui/icons-material/Work';
+import { ReportStatus } from './models/reportTypes';
 
 interface Report {
   id: string;
@@ -139,9 +140,11 @@ const ReportList: React.FC = () => {
   const handleSubmit = () => {
     const newReport: Report = {
       id: String(Date.now()),
-      ...formData,
+      title: formData.title,
+      type: formData.type as Report['type'],
+      description: formData.description,
       createdAt: new Date().toISOString().split('T')[0],
-      status: 'generating'
+      status: 'generating' as ReportStatus
     };
 
     setReports(prev => [newReport, ...prev]);

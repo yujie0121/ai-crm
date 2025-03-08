@@ -77,7 +77,7 @@ const mockOpportunityData: SalesOpportunity = {
   ]
 };
 
-const SalesDetail: React.FC<SalesDetailProps> = ({ opportunityId = '1' }) => {
+const SalesDetail: React.FC<SalesDetailProps> = ({ opportunityId: _ = '1' }) => {
   const [tabValue, setTabValue] = useState(0);
   const [predictionResult, setPredictionResult] = useState<{
     predictedRevenue: number;
@@ -88,8 +88,35 @@ const SalesDetail: React.FC<SalesDetailProps> = ({ opportunityId = '1' }) => {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+  };
+
+  const generateSalesPrediction = async () => {
+    setIsLoading(true);
+    try {
+      // 模拟API调用延迟
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // 模拟预测结果
+      const result = {
+        predictedRevenue: mockOpportunityData.amount * 1.2,
+        confidenceScore: 0.85,
+        trendDirection: 'up',
+        seasonalImpact: 0.3,
+        recommendedActions: [
+          '安排产品演示会议，重点展示自动化报表功能',
+          '准备详细的ROI分析报告',
+          '制定阶段性实施计划，降低客户的顾虑'
+        ]
+      };
+
+      setPredictionResult(result);
+    } catch (error) {
+      console.error('生成预测失败:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

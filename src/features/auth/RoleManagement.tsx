@@ -22,7 +22,7 @@ import {
   FormControlLabel,
   Checkbox
 } from '@mui/material';
-import { Role, Permission, PERMISSIONS } from './types';
+import { Role, PERMISSIONS } from './types';
 import PermissionGuard from './PermissionGuard';
 
 interface RoleFormData {

@@ -9,6 +9,7 @@ import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
 const drawerWidth = 240;
 
@@ -176,6 +177,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 <LibraryBooksIcon />
               </ListItemIcon>
               <ListItemText primary="知识库" />
+            </ListItem>
+            <ListItem
+              button
+              selected={location.pathname.startsWith('/users')}
+              onClick={() => navigate('/users')}
+            >
+              <ListItemIcon>
+                <AdminPanelSettingsIcon />
+              </ListItemIcon>
+              <ListItemText primary="用户管理" />
             </ListItem>
           </List>
         </Box>
