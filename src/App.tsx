@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './components/layout/MainLayout';
-import Dashboard from './features/dashboard/Dashboard';
+import Dashboard from './features/dashboard/EnhancedDashboard';
 import CustomerList from './features/customers/CustomerList';
 import CustomerDetail from './features/customers/CustomerDetail';
 import SalesList from './features/sales/SalesList';

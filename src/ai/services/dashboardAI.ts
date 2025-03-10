@@ -114,6 +114,17 @@ export class DashboardAIService {
         data: productRecommendations.data
       });
       
+      // 市场分析洞察
+      const marketAnalysis = this.analyzeMarketTrends(salesPredictions, behaviorAnalyses);
+      insights.push({
+        type: 'market_analysis',
+        title: '市场趋势分析',
+        content: marketAnalysis.description,
+        confidenceScore: marketAnalysis.confidenceScore,
+        recommendations: marketAnalysis.recommendations,
+        data: marketAnalysis.data
+      });
+      
       return insights;
     } catch (error) {
       console.error('获取仪表盘AI洞察失败:', error);
@@ -157,6 +168,76 @@ export class DashboardAIService {
           revenue: p.predictedRevenue,
           trend: p.trendDirection
         }))
+      }
+    };
+  }
+  
+  /**
+   * 分析市场趋势
+   * 综合销售预测和客户行为分析，生成市场趋势洞察
+   */
+  private analyzeMarketTrends(predictions: SalesPredictionResult[], analyses: BehaviorAnalysisResult[]): {
+    description: string;
+    confidenceScore: number;
+    recommendations: string[];
+    data: any;
+  } {
+    // 分析市场增长趋势
+    const upTrends = predictions.filter(p => p.trendDirection === 'up').length;
+    const marketGrowthRate = (upTrends / predictions.length) * 100;
+    
+    // 分析季节性影响
+    const seasonalImpact = predictions.reduce((sum, p) => sum + p.seasonalImpact, 0) / predictions.length;
+    
+    // 分析客户偏好变化
+    const allCategories = analyses.flatMap(a => a.preferredCategories);
+    const categoryCount = allCategories.reduce((count, category) => {
+      count[category] = (count[category] || 0) + 1;
+      return count;
+    }, {} as Record<string, number>);
+    
+    // 获取热门类别
+    const trendingCategories = Object.entries(categoryCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([category]) => category);
+    
+    // 计算市场竞争指数 (模拟数据)
+    const competitionIndex = 0.3 + Math.random() * 0.4; // 0.3-0.7范围内
+    
+    // 计算平均置信度
+    const salesConfidence = predictions.reduce((sum, p) => sum + p.confidenceScore, 0) / predictions.length;
+    const behaviorConfidence = analyses.reduce((sum, a) => sum + (1 - a.churnRisk), 0) / analyses.length;
+    const avgConfidence = (salesConfidence + behaviorConfidence) / 2;
+    
+    // 生成市场机会点
+    const marketOpportunities = [
+      `${trendingCategories[0] || '高端产品'}市场需求增长`,
+      `${seasonalImpact > 0.5 ? '季节性产品' : '全季产品'}销售机会`,
+      `客户${analyses.filter(a => a.purchaseProbability > 0.7).length > analyses.length / 2 ? '购买意愿强烈' : '需要刺激购买'}`
+    ];
+    
+    return {
+      description: `市场分析显示，整体市场${marketGrowthRate > 50 ? '呈上升趋势' : '趋于稳定'}，${trendingCategories.length > 0 ? `其中${trendingCategories.join('、')}类别最受关注` : ''}。竞争强度${competitionIndex > 0.5 ? '较高' : '适中'}。`,
+      confidenceScore: avgConfidence,
+      recommendations: [
+        '关注竞争对手动态并调整市场策略',
+        '针对热门品类增加营销投入',
+        '根据市场趋势调整产品组合'
+      ],
+      data: {
+        marketGrowthRate,
+        seasonalImpact,
+        trendingCategories,
+        competitionIndex,
+        marketOpportunities,
+        regionalData: [
+          { region: '华东', growth: 0.12, share: 0.35 },
+          { region: '华南', growth: 0.08, share: 0.25 },
+          { region: '华北', growth: 0.15, share: 0.20 },
+          { region: '西部', growth: 0.05, share: 0.15 },
+          { region: '其他', growth: 0.03, share: 0.05 }
+        ]
       }
     };
   }

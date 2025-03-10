@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
-  Paper,
   Table,
   TableBody,
   TableCell,
@@ -12,12 +11,24 @@ import {
   Typography,
   Chip,
   IconButton,
-  Tooltip
+  Tooltip,
+  Card,
+  CardContent,
+  TextField,
+  InputAdornment,
+  Menu,
+  MenuItem,
+  Grid,
+  Avatar
 } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import AddIcon from '@mui/icons-material/Add';
+import SearchIcon from '@mui/icons-material/Search';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import SearchOffIcon from '@mui/icons-material/SearchOff';
 
 interface SalesOpportunity {
   id: string;
@@ -67,6 +78,10 @@ const getStageColor = (stage: string) => {
 
 const SalesList: React.FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [stageFilter, setStageFilter] = useState('全部');
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleViewOpportunity = (opportunityId: string) => {
     navigate(`/sales/${opportunityId}`);
@@ -80,10 +95,32 @@ const SalesList: React.FC = () => {
     navigate('/sales/create');
   };
 
+  // 处理筛选菜单
+  const handleFilterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleFilterClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleStageFilterChange = (stage: string) => {
+    setStageFilter(stage);
+    handleFilterClose();
+  };
+
+  // 筛选销售机会数据
+  const filteredSales = mockSalesData.filter(opportunity => {
+    const matchesSearch = opportunity.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         opportunity.productName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStage = stageFilter === '全部' || opportunity.stage === stageFilter;
+    return matchesSearch && matchesStage;
+  });
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h5" component="h2" sx={{ fontWeight: 600 }}>
+        <Typography variant="h5" component="h2" sx={{ fontWeight: 600, color: 'primary.dark' }}>
           销售机会
         </Typography>
         <Button
@@ -94,154 +131,288 @@ const SalesList: React.FC = () => {
           sx={{
             px: 3,
             py: 1,
-            fontSize: '0.9rem'
+            fontSize: '0.9rem',
+            boxShadow: theme.shadows[2],
+            '&:hover': {
+              boxShadow: theme.shadows[4],
+              transform: 'translateY(-2px)'
+            },
+            transition: 'all 0.2s'
           }}
         >
           新增机会
         </Button>
       </Box>
 
-      <TableContainer 
-        component={Paper} 
-        sx={{ 
-          mb: 4,
-          width: '100%',
-          borderRadius: 2,
-          overflow: 'hidden',
-          boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)',
-          background: 'linear-gradient(to right bottom, #ffffff, #fafafa)',
-          backdropFilter: 'blur(10px)',
-          '& .MuiTable-root': {
-            borderCollapse: 'separate',
-            borderSpacing: '0 8px',
-            width: '100%',
-            overflowX: 'auto'
-          },
-          '& .MuiTableCell-root': {
-            padding: '12px 20px',
-            transition: 'all 0.2s ease-in-out'
-          },
-          '& .MuiTableHead-root .MuiTableCell-root': {
-            fontWeight: 600,
-            color: '#1a1f2c',
-            borderBottom: '2px solid rgba(33, 150, 243, 0.1)'
-          }
-        }}
-      >
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>客户名称</TableCell>
-              <TableCell>产品名称</TableCell>
-              <TableCell>金额</TableCell>
-              <TableCell>阶段</TableCell>
-              <TableCell>成功概率</TableCell>
-              <TableCell>预计成交日期</TableCell>
-              <TableCell align="center" width="120">操作</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {mockSalesData.map((opportunity) => (
-              <TableRow 
-                key={opportunity.id} 
-                hover
+      {/* 搜索和筛选工具栏 */}
+      <Card sx={{ mb: 3, boxShadow: theme.shadows[1], borderRadius: 2 }}>
+        <CardContent sx={{ p: 2 }}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                placeholder="搜索客户名称或产品名称..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                variant="outlined"
+                size="small"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
                 sx={{
-                  cursor: 'pointer',
-                  background: '#ffffff',
-                  '& > td': {
-                    transition: 'all 0.3s ease',
-                    borderBottom: '1px solid rgba(224, 224, 224, 0.4)',
-                    '&:first-of-type': {
-                      borderTopLeftRadius: '8px',
-                      borderBottomLeftRadius: '8px'
-                    },
-                    '&:last-of-type': {
-                      borderTopRightRadius: '8px',
-                      borderBottomRightRadius: '8px'
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    backgroundColor: alpha(theme.palette.background.paper, 0.8),
+                    '&:hover': {
+                      backgroundColor: theme.palette.background.paper,
                     }
-                  },
-                  '&:hover > td': {
-                    backgroundColor: 'rgba(33, 150, 243, 0.04)',
-                    transform: 'translateY(-1px)'
                   }
                 }}
-                onClick={() => handleViewOpportunity(opportunity.id)}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={handleFilterClick}
+                startIcon={<FilterListIcon />}
+                sx={{ mr: 1, borderRadius: 2 }}
               >
-                <TableCell>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {opportunity.customerName}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2">{opportunity.productName}</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" sx={{ fontWeight: 500, color: 'primary.main' }}>
-                    ¥{opportunity.amount.toLocaleString()}
-                  </Typography>
-                </TableCell>
-                <TableCell>
+                {stageFilter === '全部' ? '筛选阶段' : `阶段: ${stageFilter}`}
+              </Button>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleFilterClose}
+                PaperProps={{
+                  elevation: 3,
+                  sx: { borderRadius: 2, minWidth: 180 }
+                }}
+              >
+                <MenuItem
+                  onClick={() => handleStageFilterChange('全部')}
+                  selected={stageFilter === '全部'}
+                >
+                  全部
+                </MenuItem>
+                <MenuItem
+                  onClick={() => handleStageFilterChange('需求确认')}
+                  selected={stageFilter === '需求确认'}
+                >
                   <Chip
-                    label={opportunity.stage}
                     size="small"
-                    color={getStageColor(opportunity.stage) as 'error' | 'warning' | 'success' | 'default'}
-                    sx={{ minWidth: 80 }}
+                    label="需求确认"
+                    color="primary"
+                    sx={{ mr: 1, height: 20 }}
                   />
-                </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ mr: 1 }}>
-                      {opportunity.probability}%
-                    </Typography>
-                    <Box
-                      sx={{
-                        width: 60,
-                        height: 4,
-                        backgroundColor: 'rgba(0, 0, 0, 0.08)',
-                        borderRadius: 2,
-                        overflow: 'hidden'
-                      }}
-                    >
-                      <Box
+                  需求确认
+                </MenuItem>
+                <MenuItem
+                  onClick={() => handleStageFilterChange('商务谈判')}
+                  selected={stageFilter === '商务谈判'}
+                >
+                  <Chip
+                    size="small"
+                    label="商务谈判"
+                    color="warning"
+                    sx={{ mr: 1, height: 20 }}
+                  />
+                  商务谈判
+                </MenuItem>
+                <MenuItem
+                  onClick={() => handleStageFilterChange('已成交')}
+                  selected={stageFilter === '已成交'}
+                >
+                  <Chip
+                    size="small"
+                    label="已成交"
+                    color="success"
+                    sx={{ mr: 1, height: 20 }}
+                  />
+                  已成交
+                </MenuItem>
+                <MenuItem
+                  onClick={() => handleStageFilterChange('已失败')}
+                  selected={stageFilter === '已失败'}
+                >
+                  <Chip
+                    size="small"
+                    label="已失败"
+                    color="error"
+                    sx={{ mr: 1, height: 20 }}
+                  />
+                  已失败
+                </MenuItem>
+              </Menu>
+              <Button
+                variant="text"
+                color="primary"
+                onClick={() => {
+                  setSearchTerm('');
+                  setStageFilter('全部');
+                }}
+                sx={{ borderRadius: 2 }}
+              >
+                重置
+              </Button>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      <Card sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: theme.shadows[1] }}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>客户名称</TableCell>
+                <TableCell>产品名称</TableCell>
+                <TableCell>金额</TableCell>
+                <TableCell>阶段</TableCell>
+                <TableCell>成功概率</TableCell>
+                <TableCell>预计成交日期</TableCell>
+                <TableCell align="center" width="120">操作</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredSales.length > 0 ? (
+                filteredSales.map((opportunity) => (
+                  <TableRow
+                    key={opportunity.id}
+                    sx={{
+                      '&:hover': {
+                        backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                      },
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => handleViewOpportunity(opportunity.id)}
+                  >
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Avatar
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            mr: 2,
+                            bgcolor: alpha(theme.palette.primary.main, 0.1),
+                            color: 'primary.main',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          {opportunity.customerName.charAt(0)}
+                        </Avatar>
+                        <Typography variant="subtitle2" fontWeight="medium">
+                          {opportunity.customerName}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{opportunity.productName}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="subtitle2" fontWeight="medium" color="primary.main">
+                        ¥{opportunity.amount.toLocaleString()}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={opportunity.stage}
+                        color={getStageColor(opportunity.stage) as 'error' | 'warning' | 'success' | 'primary' | 'default'}
+                        size="small"
                         sx={{
-                          width: `${opportunity.probability}%`,
-                          height: '100%',
-                          backgroundColor: 'primary.main',
-                          transition: 'width 0.3s ease-in-out'
+                          fontWeight: 500,
+                          borderRadius: '6px',
+                          px: 1,
+                          minWidth: 72
                         }}
                       />
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography variant="body2" sx={{ mr: 1 }}>
+                          {opportunity.probability}%
+                        </Typography>
+                        <Box
+                          sx={{
+                            width: 60,
+                            height: 4,
+                            backgroundColor: 'rgba(0, 0, 0, 0.08)',
+                            borderRadius: 2,
+                            overflow: 'hidden'
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: `${opportunity.probability}%`,
+                              height: '100%',
+                              backgroundColor: 'primary.main',
+                              transition: 'width 0.3s ease-in-out'
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{opportunity.expectedClosingDate}</Typography>
+                    </TableCell>
+                    <TableCell align="center" onClick={(e) => e.stopPropagation()}>
+                      <Tooltip title="查看详情" arrow>
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewOpportunity(opportunity.id);
+                          }}
+                          sx={{
+                            mr: 1,
+                            '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.1) }
+                          }}
+                        >
+                          <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="编辑" arrow>
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditOpportunity(opportunity.id);
+                          }}
+                          sx={{
+                            '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.1) }
+                          }}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7}>
+                    <Box sx={{ textAlign: 'center', py: 3 }}>
+                      <SearchOffIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
+                      <Typography variant="h6" color="text.secondary" gutterBottom>
+                        未找到匹配的销售机会
+                      </Typography>
+                      <Typography variant="body2" color="text.disabled">
+                        尝试调整搜索条件或清除筛选器
+                      </Typography>
                     </Box>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2">{opportunity.expectedClosingDate}</Typography>
-                </TableCell>
-                <TableCell align="center" onClick={(e) => e.stopPropagation()}>
-                  <Tooltip title="查看详情" arrow>
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => handleViewOpportunity(opportunity.id)}
-                      sx={{ mr: 1 }}
-                    >
-                      <VisibilityIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="编辑机会" arrow>
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => handleEditOpportunity(opportunity.id)}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Card>
     </Box>
   );
 };

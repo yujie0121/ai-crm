@@ -2,11 +2,7 @@
 // npm install @tensorflow/tfjs
 // 或
 // yarn add @tensorflow/tfjs
-// 需要先安装 TensorFlow.js 依赖
-// npm install @tensorflow/tfjs-node
-// 或者使用浏览器版本
-// npm install @tensorflow/tfjs
-import * as tf from '@tensorflow/tfjs-node';
+import * as tf from '@tensorflow/tfjs';
 
 /**
  * 客户行为分析模型
@@ -212,22 +208,29 @@ export class CustomerBehaviorModel {
   }
   
   /**
-   * 保存模型（实际应用中会使用）
+   * 保存模型（浏览器环境）
    */
-  async saveModel(path: string): Promise<void> {
+  async saveModel(modelName: string): Promise<void> {
     if (!this.model) {
       throw new Error('模型尚未初始化');
     }
     
-    await this.model.save(`file://${path}`);
-    console.log(`模型已保存到 ${path}`);
+    // 使用IndexedDB存储模型
+    await this.model.save(`indexeddb://${modelName}`);
+    console.log(`模型已保存到浏览器存储，名称: ${modelName}`);
   }
   
   /**
-   * 加载模型（实际应用中会使用）
+   * 加载模型（浏览器环境）
    */
-  async loadModel(path: string): Promise<void> {
-    this.model = await tf.loadLayersModel(`file://${path}`);
-    console.log(`模型已从 ${path} 加载`);
+  async loadModel(modelName: string): Promise<void> {
+    try {
+      this.model = await tf.loadLayersModel(`indexeddb://${modelName}`);
+      console.log(`模型已从浏览器存储加载，名称: ${modelName}`);
+    } catch (error) {
+      console.error('加载模型失败:', error);
+      // 如果加载失败，初始化一个新模型
+      await this.initialize();
+    }
   }
 }

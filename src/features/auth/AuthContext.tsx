@@ -50,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // 验证测试账号
-      if (username === 'niuma' && password === '1314') {
+      if (username === 'admin' && password === '1') {
         setUser(mockUser);
         setIsAuthenticated(true);
         localStorage.setItem('user', JSON.stringify(mockUser));

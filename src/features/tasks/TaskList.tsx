@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
-  Paper,
   Table,
   TableBody,
   TableCell,
@@ -12,12 +11,24 @@ import {
   Typography,
   Chip,
   IconButton,
-  Tooltip
+  Tooltip,
+  Card,
+  CardContent,
+  TextField,
+  InputAdornment,
+  Menu,
+  MenuItem,
+  Grid,
+  Avatar
 } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import AddIcon from '@mui/icons-material/Add';
+import SearchIcon from '@mui/icons-material/Search';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import SearchOffIcon from '@mui/icons-material/SearchOff';
 
 interface Task {
   id: string;
@@ -85,6 +96,10 @@ const getStatusColor = (status: string) => {
 
 const TaskList: React.FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('全部');
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleViewTask = (taskId: string) => {
     navigate(`/tasks/${taskId}`);
@@ -98,10 +113,35 @@ const TaskList: React.FC = () => {
     navigate('/tasks/create');
   };
 
+  // 处理筛选菜单
+  const handleFilterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleFilterClose = () => {
+    setAnchorEl(null);
+  };
+  
+  const handleStatusFilterChange = (status: string) => {
+    setStatusFilter(status);
+    handleFilterClose();
+  };
+  
+  // 筛选任务数据
+  const filteredTasks = mockTasks.filter(task => {
+    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         task.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         task.relatedCustomer.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === '全部' || task.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" component="h2">
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Typography variant="h5" component="h2" sx={{ fontWeight: 600, color: 'primary.dark' }}>
           任务管理
         </Typography>
         <Button
@@ -109,107 +149,284 @@ const TaskList: React.FC = () => {
           color="primary"
           onClick={handleCreateTask}
           startIcon={<AddIcon />}
+          sx={{
+            px: 3,
+            py: 1,
+            fontSize: '0.9rem',
+            boxShadow: theme.shadows[2],
+            '&:hover': {
+              boxShadow: theme.shadows[4],
+              transform: 'translateY(-2px)'
+            },
+            transition: 'all 0.2s'
+          }}
         >
           创建任务
         </Button>
       </Box>
-
-      <TableContainer 
-        component={Paper} 
-        sx={{ 
-          mb: 4,
-          width: '100%',
-          borderRadius: 2,
-          overflow: 'hidden',
-          boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)',
-          background: 'linear-gradient(to right bottom, #ffffff, #fafafa)',
-          backdropFilter: 'blur(10px)',
-          '& .MuiTable-root': {
-            borderCollapse: 'separate',
-            borderSpacing: '0 8px',
-            width: '100%',
-            overflowX: 'auto'
-          },
-          '& .MuiTableCell-root': {
-            padding: '12px 20px',
-            transition: 'all 0.2s ease-in-out'
-          },
-          '& .MuiTableHead-root .MuiTableCell-root': {
-            fontWeight: 600,
-            color: '#1a1f2c',
-            borderBottom: '2px solid rgba(33, 150, 243, 0.1)'
-          }
-        }}>
-
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>任务标题</TableCell>
-              <TableCell>相关客户</TableCell>
-              <TableCell>负责人</TableCell>
-              <TableCell>截止日期</TableCell>
-              <TableCell>优先级</TableCell>
-              <TableCell>状态</TableCell>
-              <TableCell align="center">操作</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {mockTasks.map((task) => (
-              <TableRow key={task.id} hover>
-                <TableCell>
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {task.title}
-                  </Typography>
-                  <Typography variant="caption" color="textSecondary">
-                    {task.description}
-                  </Typography>
-                </TableCell>
-                <TableCell>{task.relatedCustomer}</TableCell>
-                <TableCell>{task.assignedTo}</TableCell>
-                <TableCell>{task.dueDate}</TableCell>
-                <TableCell>
+      
+      {/* 搜索和筛选工具栏 */}
+      <Card sx={{ mb: 3, boxShadow: theme.shadows[1], borderRadius: 2 }}>
+        <CardContent sx={{ p: 2 }}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                placeholder="搜索任务标题、描述或客户..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                variant="outlined"
+                size="small"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    backgroundColor: alpha(theme.palette.background.paper, 0.8),
+                    '&:hover': {
+                      backgroundColor: theme.palette.background.paper,
+                    }
+                  }
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={handleFilterClick}
+                startIcon={<FilterListIcon />}
+                sx={{ mr: 1, borderRadius: 2 }}
+              >
+                {statusFilter === '全部' ? '筛选状态' : `状态: ${statusFilter}`}
+              </Button>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleFilterClose}
+                PaperProps={{
+                  elevation: 3,
+                  sx: { borderRadius: 2, minWidth: 180 }
+                }}
+              >
+                <MenuItem 
+                  onClick={() => handleStatusFilterChange('全部')}
+                  selected={statusFilter === '全部'}
+                >
+                  全部
+                </MenuItem>
+                <MenuItem 
+                  onClick={() => handleStatusFilterChange('进行中')}
+                  selected={statusFilter === '进行中'}
+                >
                   <Chip 
-                    label={task.priority} 
-                    color={getPriorityColor(task.priority) as 'error' | 'warning' | 'success' | 'default'} 
                     size="small" 
-                    sx={{ minWidth: 60 }}
+                    label="进行中" 
+                    color="primary" 
+                    sx={{ mr: 1, height: 20 }} 
                   />
-                </TableCell>
-                <TableCell>
+                  进行中
+                </MenuItem>
+                <MenuItem 
+                  onClick={() => handleStatusFilterChange('未开始')}
+                  selected={statusFilter === '未开始'}
+                >
                   <Chip 
-                    label={task.status} 
-                    color={getStatusColor(task.status) as 'success' | 'primary' | 'default' | 'error'} 
                     size="small" 
-                    sx={{ minWidth: 70 }}
+                    label="未开始" 
+                    color="default" 
+                    sx={{ mr: 1, height: 20 }} 
                   />
-                </TableCell>
-                <TableCell align="center">
-                  <Tooltip title="查看详情">
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => handleViewTask(task.id)}
-                    >
-                      <VisibilityIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="编辑任务">
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => handleEditTask(task.id)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
+                  未开始
+                </MenuItem>
+                <MenuItem 
+                  onClick={() => handleStatusFilterChange('完成')}
+                  selected={statusFilter === '完成'}
+                >
+                  <Chip 
+                    size="small" 
+                    label="完成" 
+                    color="success" 
+                    sx={{ mr: 1, height: 20 }} 
+                  />
+                  完成
+                </MenuItem>
+                <MenuItem 
+                  onClick={() => handleStatusFilterChange('延期')}
+                  selected={statusFilter === '延期'}
+                >
+                  <Chip 
+                    size="small" 
+                    label="延期" 
+                    color="error" 
+                    sx={{ mr: 1, height: 20 }} 
+                  />
+                  延期
+                </MenuItem>
+              </Menu>
+              <Button
+                variant="text"
+                color="primary"
+                onClick={() => {
+                  setSearchTerm('');
+                  setStatusFilter('全部');
+                }}
+                sx={{ borderRadius: 2 }}
+              >
+                重置
+              </Button>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      <Card sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: theme.shadows[1] }}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>任务标题</TableCell>
+                <TableCell>相关客户</TableCell>
+                <TableCell>负责人</TableCell>
+                <TableCell>截止日期</TableCell>
+                <TableCell>优先级</TableCell>
+                <TableCell>状态</TableCell>
+                <TableCell align="center" width="120">操作</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Box>
-  );
+            </TableHead>
+            <TableBody>
+              {filteredTasks.length > 0 ? (
+                filteredTasks.map((task) => (
+                  <TableRow 
+                    key={task.id}
+                    sx={{
+                      '&:hover': {
+                        backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                      },
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => handleViewTask(task.id)}
+                  >
+                    <TableCell>
+                      <Typography variant="subtitle2" fontWeight="medium">
+                        {task.title}
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary">
+                        {task.description}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Avatar 
+                          sx={{ 
+                            width: 28, 
+                            height: 28, 
+                            mr: 1, 
+                            bgcolor: alpha(theme.palette.primary.main, 0.1),
+                            color: 'primary.main',
+                            fontSize: '0.875rem',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          {task.relatedCustomer.charAt(0)}
+                        </Avatar>
+                        <Typography variant="body2">{task.relatedCustomer}</Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{task.assignedTo}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{task.dueDate}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={task.priority} 
+                        color={getPriorityColor(task.priority) as 'error' | 'warning' | 'success' | 'default'} 
+                        size="small" 
+                        sx={{ 
+                          fontWeight: 500,
+                          borderRadius: '6px',
+                          px: 1,
+                          minWidth: 60 
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={task.status} 
+                        color={getStatusColor(task.status) as 'success' | 'primary' | 'default' | 'error'}
+                        size="small"
+                        sx={{ 
+                          fontWeight: 500,
+                          borderRadius: '6px',
+                          px: 1,
+                          minWidth: 60 
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Tooltip title="查看详情" arrow>
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewTask(task.id);
+                            }}
+                            sx={{
+                              '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.1) },
+                            }}
+                          >
+                            <VisibilityIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="编辑任务" arrow>
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditTask(task.id);
+                            }}
+                            sx={{
+                              '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.1) },
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                )))
+                : (
+                  <TableRow>
+                    <TableCell colSpan={7}>
+                      <Box sx={{ textAlign: 'center', py: 3 }}>
+                        <SearchOffIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
+                        <Typography variant="h6" color="text.secondary" gutterBottom>
+                          未找到匹配的任务
+                        </Typography>
+                        <Typography variant="body2" color="text.disabled">
+                          尝试调整搜索条件或清除筛选器
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Card>
+      </Box>
+    );
 };
 
 export default TaskList;
